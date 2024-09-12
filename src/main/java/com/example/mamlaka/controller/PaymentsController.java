@@ -5,7 +5,10 @@ import com.example.mamlaka.dto.ErrorResponseDto;
 import com.example.mamlaka.dto.PaymentRequestDto;
 import com.example.mamlaka.dto.PaymentsResponseDto;
 import com.example.mamlaka.dto.ResponseDto;
+import com.example.mamlaka.entity.IdempotencyRecord;
+import com.example.mamlaka.repository.IdempotencyRepository;
 import com.example.mamlaka.service.IPaymentService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,6 +24,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Shivere
@@ -37,6 +41,7 @@ import java.util.List;
 public class PaymentsController {
 
     private IPaymentService iPaymentsService;
+    private final IdempotencyRepository idempotencyRepository;
 
     @Operation(
             summary = "Process payment REST API",
@@ -57,8 +62,31 @@ public class PaymentsController {
     }
     )
     @PostMapping("/payment")
-    public ResponseEntity<PaymentsResponseDto> processPayment(@Valid @RequestBody PaymentRequestDto paymentRequestDto) throws Exception {
+    public ResponseEntity<PaymentsResponseDto> processPayment(
+            @Valid @RequestBody PaymentRequestDto paymentRequestDto,
+            @RequestHeader(value = "Idempotency-Key", required = true) String idempotencyKey) throws Exception {
+
+        // Check if the idempotency key already exists
+        Optional<IdempotencyRecord> existingRecord = idempotencyRepository.findByIdempotencyKey(idempotencyKey);
+
+        if (existingRecord.isPresent()) {
+            // Return the stored response if this key has been used
+            PaymentsResponseDto storedResponse = new ObjectMapper().readValue(existingRecord.get().getResponse(), PaymentsResponseDto.class);
+            return ResponseEntity.status(HttpStatus.OK).body(storedResponse);
+        }
+
+        // Process the payment if the idempotency key is not found
         PaymentsResponseDto paymentsResponseDto = iPaymentsService.processPayment(paymentRequestDto);
+
+        // Save the idempotency record along with the response
+        IdempotencyRecord idempotencyRecord = new IdempotencyRecord();
+        idempotencyRecord.setIdempotencyKey(idempotencyKey);
+        idempotencyRecord.setTransactionId(paymentsResponseDto.getTransactionId());
+        idempotencyRecord.setResponse(new ObjectMapper().writeValueAsString(paymentsResponseDto));
+
+        idempotencyRepository.save(idempotencyRecord);
+
+
         boolean paymentTransactionSuccess = PaymentsConstants.SUCCESS.equals(paymentsResponseDto.getStatus());
         System.out.println("Transaction success: " + paymentTransactionSuccess);
         if (paymentTransactionSuccess) {
@@ -70,7 +98,6 @@ public class PaymentsController {
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(paymentsResponseDto);
         }
-
     }
 
 

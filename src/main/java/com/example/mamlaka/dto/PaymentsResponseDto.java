@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Schema(
@@ -26,7 +27,7 @@ public class PaymentsResponseDto {
     @Schema(
             description = "Payment timestamp", example = ""
     )
-    private LocalDateTime timestamp;
+    private Date timestamp;
 
     @Schema(
             description = "Payment method", example = "Mpesa"

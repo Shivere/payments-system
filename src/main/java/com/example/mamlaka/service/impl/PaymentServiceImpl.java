@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -31,7 +32,7 @@ public class PaymentServiceImpl implements IPaymentService {
         PaymentsResponseDto paymentsResponseDto = new PaymentsResponseDto();
         PaymentTransaction paymentTransaction = PaymentsMapper.mapToPaymentTransaction(paymentRequestDto, new PaymentTransaction());
         paymentTransaction.setStatus(PaymentsConstants.PENDING);
-        paymentTransaction.setTimestamp(LocalDateTime.now());
+        paymentTransaction.setTimestamp(new Date());
 
         if ("CREDIT_CARD".equals(paymentRequestDto.getPaymentMethod())) {
             if (paymentRequestDto.getAccountNumber() == null || paymentRequestDto.getAccountNumber().isEmpty()) {

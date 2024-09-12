@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
@@ -22,7 +23,7 @@ public class PaymentTransaction extends BaseEntity {
 
     private BigDecimal amount;
 
-    private LocalDateTime timestamp;
+    private Date timestamp;
 
     private String paymentMethod;
 
