@@ -12,14 +12,13 @@ import com.example.mamlaka.repository.PaymentTransactionRepository;
 import com.example.mamlaka.security.tokenization.TokenizationService;
 import com.example.mamlaka.service.IPaymentService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -84,6 +83,7 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
+    @Cacheable(value = "paymentCache", key = "#transactionId")
     public PaymentsResponseDto getPaymentTransactionById(String transactionId) {
         PaymentTransaction paymentTransaction = paymentTransactionRepository.findByTransactionId(transactionId).orElseThrow(
                 () -> new ResourceNotFoundException("Payment transaction", "id", transactionId.toString())
