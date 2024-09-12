@@ -10,6 +10,8 @@ public class PaymentsMapper {
         paymentTransaction.setAmount(paymentRequestDto.getAmount());
         paymentTransaction.setDescription(paymentRequestDto.getDescription());
         paymentTransaction.setPaymentMethod(paymentRequestDto.getPaymentMethod());
+        paymentTransaction.setPhoneNumber(paymentRequestDto.getPhoneNumber());
+        paymentTransaction.setCardNumber(paymentRequestDto.getAccountNumber());
         return paymentTransaction;
     }
 
@@ -19,6 +21,7 @@ public class PaymentsMapper {
         paymentsResponseDto.setTimestamp(paymentTransaction.getTimestamp());
         paymentsResponseDto.setPaymentMethod(paymentTransaction.getPaymentMethod());
         paymentsResponseDto.setDescription(paymentTransaction.getDescription());
+        paymentsResponseDto.setTransactionId(paymentTransaction.getTransactionId());
         return paymentsResponseDto;
     }
 }

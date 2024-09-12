@@ -34,6 +34,11 @@ public class PaymentsResponseDto {
     private String paymentMethod;
 
     @Schema(
+            description = "Payment transaction Id", example = "12345"
+    )
+    private String transactionId;
+
+    @Schema(
             description = "Payment description", example = "Payment for so and so..."
     )
     private String description;

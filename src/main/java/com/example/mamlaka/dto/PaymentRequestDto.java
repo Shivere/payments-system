@@ -27,6 +27,19 @@ public class PaymentRequestDto {
     private String paymentMethod;
 
     @Schema(
+            description = "Payment phone number", example = "0700000000"
+    )
+    // TODO: Add custom phone number validation if payment method is MPESA. Currently throwing runtime errors.
+    private String phoneNumber;
+
+    @Schema(
+            description = "Payment card number", example = "123453"
+    )
+    @Pattern(regexp="(^$|[0-9]{16})",message = "AccountNumber must be 16 digits")
+    // TODO: Add custom account number validation if payment method is CARD. Currently throwing runtime errors.
+    private String accountNumber;
+
+    @Schema(
             description = "Payment description", example = "Payment for ..."
     )
     private String description;

@@ -57,11 +57,20 @@ public class PaymentsController {
     }
     )
     @PostMapping("/payment")
-    public ResponseEntity<ResponseDto> processPayment(@Valid @RequestBody PaymentRequestDto paymentRequestDto) {
-        iPaymentsService.processPayment(paymentRequestDto);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(new ResponseDto(PaymentsConstants.STATUS_200, PaymentsConstants.MESSAGE_200));
+    public ResponseEntity<PaymentsResponseDto> processPayment(@Valid @RequestBody PaymentRequestDto paymentRequestDto) throws Exception {
+        PaymentsResponseDto paymentsResponseDto = iPaymentsService.processPayment(paymentRequestDto);
+        boolean paymentTransactionSuccess = PaymentsConstants.SUCCESS.equals(paymentsResponseDto.getStatus());
+        System.out.println("Transaction success: " + paymentTransactionSuccess);
+        if (paymentTransactionSuccess) {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(paymentsResponseDto);
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.EXPECTATION_FAILED)
+                    .body(paymentsResponseDto);
+        }
+
     }
 
 
@@ -85,7 +94,7 @@ public class PaymentsController {
     }
     )
     @GetMapping("/payment/{id}")
-    public ResponseEntity<PaymentsResponseDto> getPaymentInfo(@PathVariable Long id) {
+    public ResponseEntity<PaymentsResponseDto> getPaymentInfo(@PathVariable String id) {
         PaymentsResponseDto paymentsResponseDto = iPaymentsService.getPaymentTransactionById(id);
         return ResponseEntity.status(HttpStatus.OK).body(paymentsResponseDto);
     }
@@ -111,7 +120,7 @@ public class PaymentsController {
     }
     )
     @GetMapping("/transactions")
-    public ResponseEntity<List<PaymentsResponseDto>> getAllTransactions(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "2") int size) {
+    public ResponseEntity<List<PaymentsResponseDto>> getAllTransactions(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         List<PaymentsResponseDto> paymentsResponseDto = iPaymentsService.getAllPaymentTransactions(page, size);
         return ResponseEntity.status(HttpStatus.OK).body(paymentsResponseDto);
     }

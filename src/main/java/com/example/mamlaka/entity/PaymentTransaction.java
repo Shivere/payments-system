@@ -20,13 +20,17 @@ public class PaymentTransaction extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String status;
-
     private BigDecimal amount;
 
     private LocalDateTime timestamp;
 
     private String paymentMethod;
+
+    private String phoneNumber;
+
+    private String cardNumber;
+
+    private String status;
 
     private String description;
 

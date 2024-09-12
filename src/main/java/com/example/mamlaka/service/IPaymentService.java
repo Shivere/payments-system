@@ -13,13 +13,13 @@ public interface IPaymentService {
      *
      * @param paymentRequestDto - PaymentRequestDto Object
      */
-    void processPayment(PaymentRequestDto paymentRequestDto);
+    PaymentsResponseDto processPayment(PaymentRequestDto paymentRequestDto) throws Exception;
 
     /**
-     * @param id - Input Payment Transaction Id
+     * @param transactionId - Input Payment Transaction Id
      * @return Payment Transaction Details based on a given id
      */
-    PaymentsResponseDto getPaymentTransactionById(Long id);
+    PaymentsResponseDto getPaymentTransactionById(String transactionId);
 
     /**
      * @return List of Payment Transactions in paginated form

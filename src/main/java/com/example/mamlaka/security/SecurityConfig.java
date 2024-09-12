@@ -31,7 +31,14 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF protection using the new method
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/register", "/api/login").permitAll() // Allow public access to authenticate and register endpoints
+                                .requestMatchers("/api/register", "/api/login").permitAll() // Public access to register and login endpoints
+                                .requestMatchers(
+                                        "/swagger-ui/**",             // Swagger UI files
+                                        "/v3/api-docs/**",            // OpenAPI docs
+                                        "/swagger-resources/**",      // Swagger resources
+                                        "/webjars/**",                // Webjars (CSS, JS for Swagger UI)
+                                        "/swagger-ui.html"            // Swagger UI HTML file
+                                ).permitAll()  // Allow public access to all Swagger-related paths
 //                        .anyRequest().authenticated() // All other requests need to be authenticated
                         .requestMatchers("/api/payment/**").hasRole("ADMIN") // Role-based access
                         .requestMatchers("/api/transactions/**").hasRole("ADMIN") // Role-based access
