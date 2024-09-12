@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @AllArgsConstructor
@@ -28,77 +28,71 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Override
     public PaymentsResponseDto processPayment(PaymentRequestDto paymentRequestDto) throws Exception {
-        PaymentsResponseDto paymentsResponseDto = new PaymentsResponseDto();
         PaymentTransaction paymentTransaction = PaymentsMapper.mapToPaymentTransaction(paymentRequestDto, new PaymentTransaction());
         paymentTransaction.setStatus(PaymentsConstants.PENDING);
         paymentTransaction.setTimestamp(new Date());
 
-        if ("CREDIT_CARD".equals(paymentRequestDto.getPaymentMethod())) {
-            if (paymentRequestDto.getAccountNumber() == null || paymentRequestDto.getAccountNumber().isEmpty()) {
-                throw new RequiredFieldException("Card number", "card payments");
-            }
-            try {
-                // Tokenize card number;
-                String tokenizedPaymentDetails = TokenizationService.tokenize(paymentRequestDto.getAccountNumber());
+        String paymentMethod = paymentRequestDto.getPaymentMethod();
+        String transactionId = generateTransactionId();
 
-                // Simulate the payment processing result (random success or failure)
-                String transactionStatus = (new Random().nextBoolean()) ? PaymentsConstants.SUCCESS : PaymentsConstants.FAILED;
-                // String transactionId = UUID.randomUUID().toString();
-                String transactionId = String.valueOf(1000000000L + new Random().nextInt(900000000));
-
-                paymentTransaction.setStatus(transactionStatus);
-                paymentTransaction.setTransactionId(transactionId);
-                paymentTransaction.setCardNumber(tokenizedPaymentDetails);
-                paymentTransactionRepository.save(paymentTransaction);
-
-                paymentsResponseDto = PaymentsMapper.mapToPaymentsResponseDto(paymentTransaction, new PaymentsResponseDto());
-            } catch (Exception e) {
-                throw new RuntimeException("Error processing payment", e);
-            }
-        } else if ("MPESA".equals(paymentRequestDto.getPaymentMethod())) {
-            if (paymentRequestDto.getPhoneNumber() == null || paymentRequestDto.getPhoneNumber().isEmpty()) {
-                throw new PhoneNumberRequiredException("Phone number is required for MPESA payment");
-            }
-            try {
-                // Tokenize phone number;
-                String tokenizedPaymentDetails = TokenizationService.tokenize(paymentRequestDto.getPhoneNumber());
-
-                // Simulate the payment processing result (random success or failure)
-                String transactionStatus = (new Random().nextBoolean()) ? "SUCCESS" : "FAILED";
-                // String transactionId = UUID.randomUUID().toString();
-                String transactionId = String.valueOf(1000000000L + new Random().nextInt(900000000));
-
-                paymentTransaction.setStatus(transactionStatus);
-                paymentTransaction.setTransactionId(transactionId);
-                paymentTransaction.setPhoneNumber(tokenizedPaymentDetails);
-                paymentTransactionRepository.save(paymentTransaction);
-                paymentsResponseDto = PaymentsMapper.mapToPaymentsResponseDto(paymentTransaction, new PaymentsResponseDto());
-            } catch (Exception e) {
-                throw new RuntimeException("Error processing payment", e);
-            }
-        } else {
-            throw new RuntimeException("Invalid payment method");
+        switch (paymentMethod) {
+            case "CREDIT_CARD" -> processCreditCardPayment(paymentRequestDto, paymentTransaction, transactionId);
+            case "MPESA" -> processMpesaPayment(paymentRequestDto, paymentTransaction, transactionId);
+            default -> throw new RuntimeException("Invalid payment method");
         }
-        return paymentsResponseDto;
+
+        return PaymentsMapper.mapToPaymentsResponseDto(paymentTransaction, new PaymentsResponseDto());
+    }
+
+    private void processCreditCardPayment(PaymentRequestDto paymentRequestDto, PaymentTransaction paymentTransaction, String transactionId) {
+        if (paymentRequestDto.getAccountNumber() == null || paymentRequestDto.getAccountNumber().isEmpty()) {
+            throw new RequiredFieldException("Card number", "card payments");
+        }
+        try {
+            String tokenizedCard = TokenizationService.tokenize(paymentRequestDto.getAccountNumber());
+            paymentTransaction.setCardNumber(tokenizedCard);
+            finalizePayment(paymentTransaction, transactionId);
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing credit card payment", e);
+        }
+    }
+
+    private void processMpesaPayment(PaymentRequestDto paymentRequestDto, PaymentTransaction paymentTransaction, String transactionId) {
+        if (paymentRequestDto.getPhoneNumber() == null || paymentRequestDto.getPhoneNumber().isEmpty()) {
+            throw new PhoneNumberRequiredException("Phone number is required for MPESA payment");
+        }
+        try {
+            String tokenizedPhone = TokenizationService.tokenize(paymentRequestDto.getPhoneNumber());
+            paymentTransaction.setPhoneNumber(tokenizedPhone);
+            finalizePayment(paymentTransaction, transactionId);
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing MPESA payment", e);
+        }
+    }
+
+    private void finalizePayment(PaymentTransaction paymentTransaction, String transactionId) {
+        String transactionStatus = ThreadLocalRandom.current().nextBoolean() ? PaymentsConstants.SUCCESS : PaymentsConstants.FAILED;
+        paymentTransaction.setStatus(transactionStatus);
+        paymentTransaction.setTransactionId(transactionId);
+        paymentTransactionRepository.save(paymentTransaction);
+    }
+
+    private String generateTransactionId() {
+        return String.valueOf(1000000000L + ThreadLocalRandom.current().nextInt(900000000));
     }
 
     @Override
     @Cacheable(value = "paymentCache", key = "#transactionId")
     public PaymentsResponseDto getPaymentTransactionById(String transactionId) {
-        PaymentTransaction paymentTransaction = paymentTransactionRepository.findByTransactionId(transactionId).orElseThrow(
-                () -> new ResourceNotFoundException("Payment transaction", "id", transactionId.toString())
-        );
-        PaymentsResponseDto paymentsResponseDto =  PaymentsMapper.mapToPaymentsResponseDto(paymentTransaction, new PaymentsResponseDto());
-
-        return paymentsResponseDto;
+        return paymentTransactionRepository.findByTransactionId(transactionId)
+                .map(paymentTransaction -> PaymentsMapper.mapToPaymentsResponseDto(paymentTransaction, new PaymentsResponseDto()))
+                .orElseThrow(() -> new ResourceNotFoundException("Payment transaction", "id", transactionId));
     }
 
     @Override
     public List<PaymentsResponseDto> getAllPaymentTransactions(int page, int size) {
-        List<PaymentTransaction> paymentTransactions = paymentTransactionRepository.findAll(PageRequest.of(page, size)).getContent();
-
-        // Map PaymentTransaction to PaymentsResponseDto
-        return paymentTransactions.stream()
-                .map(paymentTransaction -> PaymentsMapper.mapToPaymentsResponseDto(paymentTransaction, new PaymentsResponseDto())).toList();
+        return paymentTransactionRepository.findAll(PageRequest.of(page, size)).stream()
+                .map(paymentTransaction -> PaymentsMapper.mapToPaymentsResponseDto(paymentTransaction, new PaymentsResponseDto()))
+                .toList();
     }
 }

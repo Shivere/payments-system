@@ -2,9 +2,7 @@ package com.example.mamlaka.controller;
 
 import com.example.mamlaka.constants.PaymentsConstants;
 import com.example.mamlaka.dto.*;
-import com.example.mamlaka.security.JwtUtil;
 import com.example.mamlaka.service.IUserService;
-import com.example.mamlaka.service.impl.MyUserDetailsServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +14,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,10 +31,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class AuthController {
 
-    private AuthenticationManager authenticationManager;
-    private MyUserDetailsServiceImpl userDetailsService;
     private IUserService userService;
-    private JwtUtil jwtUtil;
 
     @Operation(
             summary = "login REST API",
