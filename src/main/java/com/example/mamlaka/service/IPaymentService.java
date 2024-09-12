@@ -16,7 +16,6 @@ public interface IPaymentService {
     void processPayment(PaymentRequestDto paymentRequestDto);
 
     /**
-     * TODO: Return Payment TransactionDto
      * @param id - Input Payment Transaction Id
      * @return Payment Transaction Details based on a given id
      */

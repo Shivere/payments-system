@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 
 @Service
 @AllArgsConstructor
@@ -25,6 +26,18 @@ public class PaymentServiceImpl implements IPaymentService {
         PaymentTransaction paymentTransaction = PaymentsMapper.mapToPaymentTransaction(paymentRequestDto, new PaymentTransaction());
         paymentTransaction.setStatus("PENDING");
         paymentTransaction.setTimestamp(LocalDateTime.now());
+
+        // Simulate payment processing by a third-party gateway
+        // Mock transaction ID
+        paymentTransaction.setTransactionId(String.valueOf(1000000000L + new Random().nextInt(900000000)));
+
+        if ("CREDIT_CARD".equals(paymentRequestDto.getPaymentMethod())) {
+            paymentTransaction.setStatus("COMPLETED");
+        } else if ("MPESA".equals(paymentRequestDto.getPaymentMethod())) {
+            paymentTransaction.setStatus("COMPLETED");
+        } else {
+            paymentTransaction.setStatus("PENDING");
+        }
         paymentTransactionRepository.save(paymentTransaction);
     }
 

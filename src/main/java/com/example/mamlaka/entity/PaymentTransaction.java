@@ -29,4 +29,7 @@ public class PaymentTransaction extends BaseEntity {
     private String paymentMethod;
 
     private String description;
+
+    // Mock ID from transaction gateway for testing purposes
+    private String transactionId;
 }
