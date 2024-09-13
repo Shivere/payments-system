@@ -2,6 +2,7 @@ package com.example.mamlaka.controller;
 
 import com.example.mamlaka.entity.WebhookEndpoint;
 import com.example.mamlaka.repository.WebhookEndpointRepository;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +18,7 @@ public class WebhookRegistrationController {
     private final WebhookEndpointRepository webhookEndpointRepository;
 
     @PostMapping("/register")
-    public ResponseEntity<WebhookEndpoint> registerWebhook(@RequestBody WebhookEndpoint webhookEndpoint) {
+    public ResponseEntity<WebhookEndpoint> registerWebhook(@Valid @RequestBody WebhookEndpoint webhookEndpoint) {
         // Save the webhook endpoint to the database
         WebhookEndpoint savedEndpoint = webhookEndpointRepository.save(webhookEndpoint);
         return ResponseEntity.ok(savedEndpoint);

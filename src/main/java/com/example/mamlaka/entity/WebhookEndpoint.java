@@ -1,6 +1,8 @@
 package com.example.mamlaka.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,6 +15,8 @@ public class WebhookEndpoint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "URL cannot be null")
+    @Pattern(regexp = "https?://.+", message = "Invalid URL format")
     @Column(nullable = false)
     private String url; // The URL to send the webhook notification to
 
