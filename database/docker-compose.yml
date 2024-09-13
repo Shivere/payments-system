@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  mysql-db:
+    image: mysql:latest
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: password    # Replace with your root password
+      MYSQL_DATABASE: payment_system   # Replace with your database name
+      MYSQL_USER: user             # Replace with your DB user
+      MYSQL_PASSWORD: password     # Replace with your DB user password
+    ports:
+      - "3306:3306"  # Expose port 3306 for MySQL connections
+    volumes:
+      - mysql_data:/var/lib/mysql  # Persist data across container restarts
+    networks:
+      - mamlaka_sql_network
+
+volumes:
+  mysql_data:  # Define a Docker volume to persist database data
+
+networks:
+  mamlaka_sql_network:  # Define a network for the services
