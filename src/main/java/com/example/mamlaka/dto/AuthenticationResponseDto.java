@@ -9,7 +9,7 @@ import java.util.Set;
 @Data
 public class AuthenticationResponseDto {
     @Schema(
-            description = "Username", example = "jane@doe"
+            description = "Username", example = "admin"
     )
     private String username;
 

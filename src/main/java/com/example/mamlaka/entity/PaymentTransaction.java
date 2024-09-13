@@ -1,16 +1,12 @@
 package com.example.mamlaka.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -37,4 +33,9 @@ public class PaymentTransaction extends BaseEntity {
 
     // Mock ID from transaction gateway for testing purposes
     private String transactionId;
+
+    // Add the ManyToOne relationship with the User entity
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false) // `user_id` is the foreign key
+    private User user;
 }
