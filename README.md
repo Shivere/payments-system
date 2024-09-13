@@ -118,7 +118,7 @@ To run this project, ensure you have the following installed:
 
 ### Running Locally
 
-To run the Spring Boot application locally without Docker, you need to also have mysql configured:
+To run the Spring Boot application locally without Docker, you need to also have mysql configured and edit the properties file:
 
 1. **Clone the repository**:
    ```bash
@@ -143,16 +143,16 @@ To run the Spring Boot application locally without Docker, you need to also have
 
 You can also run the application and its MySQL database using Docker.
 
-1. **Build the jar file**:
+1. **Build the jar file**: Using -DskipTests to avoid database connection test failures since it's running on a docker env
 
     ```bash
-    mvn clean package
+    mvn clean package -DskipTests
     ```
 
 2. **Build and Run with Docker Compose**:
    Use the following command to build the Docker image and start the containers:
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
 
 3. **Accessing the Application**:
@@ -162,7 +162,7 @@ You can also run the application and its MySQL database using Docker.
 
 To stop the containers, simply run:
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ---
