@@ -31,7 +31,7 @@ import java.util.Optional;
 /**
  * CRUD REST APIs for Payments at Mamlaka
  */
-@Tag(name = "CRUD REST APIs for Payments at Mamlaka", description = "CRUD REST APIs to CREATE AND GET TRANSACTIONS")
+@Tag(name = "CRUD REST APIs for Payments", description = "CRUD REST APIs to CREATE AND GET TRANSACTIONS")
 @RestController
 @RequestMapping(path = "/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @AllArgsConstructor

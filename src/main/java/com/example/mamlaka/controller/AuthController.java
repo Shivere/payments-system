@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.*;
  */
 
 @Tag(
-        name = "CRUD REST APIs for Payments at Mamlaka",
-        description = "CRUD REST APIs at Mamlaka to CREATE AND GET TRANSACTIONS"
+        name = "Authentication REST APIs",
+        description = "Authentication REST APIs"
 )
 @RestController
 @RequestMapping(path="/api", produces = {MediaType.APPLICATION_JSON_VALUE})

@@ -4,6 +4,7 @@ import com.example.mamlaka.constants.PaymentsConstants;
 import com.example.mamlaka.dto.PaymentRequestDto;
 import com.example.mamlaka.dto.PaymentsResponseDto;
 import com.example.mamlaka.entity.PaymentTransaction;
+import com.example.mamlaka.events.PaymentStatusChangeEvent;
 import com.example.mamlaka.exception.PhoneNumberRequiredException;
 import com.example.mamlaka.exception.RequiredFieldException;
 import com.example.mamlaka.exception.ResourceNotFoundException;
@@ -11,8 +12,12 @@ import com.example.mamlaka.mapper.PaymentsMapper;
 import com.example.mamlaka.repository.PaymentTransactionRepository;
 import com.example.mamlaka.security.tokenization.TokenizationService;
 import com.example.mamlaka.service.IPaymentService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +29,13 @@ import java.util.concurrent.ThreadLocalRandom;
 @AllArgsConstructor
 public class PaymentServiceImpl implements IPaymentService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
+
     private final PaymentTransactionRepository paymentTransactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
+    @Transactional
     public PaymentsResponseDto processPayment(PaymentRequestDto paymentRequestDto) throws Exception {
         PaymentTransaction paymentTransaction = PaymentsMapper.mapToPaymentTransaction(paymentRequestDto, new PaymentTransaction());
         paymentTransaction.setStatus(PaymentsConstants.PENDING);
@@ -36,12 +45,16 @@ public class PaymentServiceImpl implements IPaymentService {
         String transactionId = generateTransactionId();
 
         switch (paymentMethod) {
-            case "CREDIT_CARD" -> processCreditCardPayment(paymentRequestDto, paymentTransaction, transactionId);
-            case "MPESA" -> processMpesaPayment(paymentRequestDto, paymentTransaction, transactionId);
+            case PaymentsConstants.CREDIT_CARD -> processCreditCardPayment(paymentRequestDto, paymentTransaction, transactionId);
+            case PaymentsConstants.MPESA -> processMpesaPayment(paymentRequestDto, paymentTransaction, transactionId);
             default -> throw new RuntimeException("Invalid payment method");
         }
 
         return PaymentsMapper.mapToPaymentsResponseDto(paymentTransaction, new PaymentsResponseDto());
+    }
+
+    private String generateTransactionId() {
+        return String.valueOf(1000000000L + ThreadLocalRandom.current().nextInt(900000000));
     }
 
     private void processCreditCardPayment(PaymentRequestDto paymentRequestDto, PaymentTransaction paymentTransaction, String transactionId) {
@@ -75,10 +88,13 @@ public class PaymentServiceImpl implements IPaymentService {
         paymentTransaction.setStatus(transactionStatus);
         paymentTransaction.setTransactionId(transactionId);
         paymentTransactionRepository.save(paymentTransaction);
-    }
 
-    private String generateTransactionId() {
-        return String.valueOf(1000000000L + ThreadLocalRandom.current().nextInt(900000000));
+        // Trigger webhook if payment is successful
+        if (PaymentsConstants.SUCCESS.equals(transactionStatus)) {
+//            triggerWebhook(paymentTransaction);
+            PaymentsResponseDto responseDto = PaymentsMapper.mapToPaymentsResponseDto(paymentTransaction, new PaymentsResponseDto());
+            eventPublisher.publishEvent(new PaymentStatusChangeEvent(responseDto));
+        }
     }
 
     @Override
